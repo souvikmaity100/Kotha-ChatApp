@@ -72,7 +72,14 @@ export const sendMessageHandler = async (req, res) => {
 
     let imageUrl;
     if (image) {
-      const uploadResp = await cloudinary.uploader.upload(image);
+      const uploadResp = await cloudinary.uploader.upload(image, {
+        folder: "chat_images",
+        width: 1280, // max width
+        height: 1280, // max height
+        crop: "limit", // 👈 keeps aspect ratio
+        quality: "auto:eco",
+        fetch_format: "auto",
+      });
       imageUrl = uploadResp.secure_url;
     }
 
