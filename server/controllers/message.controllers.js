@@ -88,12 +88,10 @@ export const sendMessageHandler = async (req, res) => {
       { writeConcern: { w: "majority" } }
     );
 
-    console.log("msg:", newMsg);
-
     // Emit the new message to the reciver's socket
     const reciverSocketId = userSocketMap[receiverId];
     if (reciverSocketId) {
-      io.to(reciverSocketId).emit("newMsg", newMsg);
+      io.to(reciverSocketId).emit("newMsg", newMsg[0]);
     }
 
     res.json({ success: true, newMsg });
