@@ -164,8 +164,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
     </section>
   ) : (
     <div className="flex flex-col items-center justify-center gap-2 text-gray-500 bg-white/10 max-md:hidden">
-      <img src="/icons/logo_icon.png" alt="logo" className="max-w-16" />
-      <p className="text-lg font-medium text-white">Let's Chat</p>
+      <img src="/icons/logo_chat_icon.png" alt="logo" className="max-w-36" />
     </div>
   );
 };

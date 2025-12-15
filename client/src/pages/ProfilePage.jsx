@@ -61,7 +61,7 @@ const ProfilePage = () => {
                   : "/icons/avatar_icon.png"
               }
               alt="avatar"
-              className="w-32 h-32 rounded-full mx-auto object-cover border-4 border-orange-500"
+              className="w-32 h-32 rounded-full mx-auto object-cover border-2 border-gray-300"
               title="Change Pic"
             />
           </label>
@@ -92,7 +92,7 @@ const ProfilePage = () => {
           </button>
         </form>
         <img
-          src="/icons/logo_icon.png"
+          src="/icons/logo_profile_icon.png"
           alt="logo"
           className="max-w-44 mx-10 max-sm:mt-10 max-sm:hidden"
         />
