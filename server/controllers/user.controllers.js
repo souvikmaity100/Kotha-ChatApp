@@ -40,7 +40,7 @@ export const signUpHandler = async (req, res) => {
 export const signInHandler = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     if (!email || !password) {
       return res.json({ success: false, message: "Both fielda are required" });
     }
@@ -48,9 +48,9 @@ export const signInHandler = async (req, res) => {
     if (!user) {
       return res.json({ success: false, message: "Email nor register" });
     }
-    
+
     const isPassValid = await bcrypt.compare(password, user.password);
-    
+
     if (!isPassValid) {
       return res.json({ success: false, message: "Invalid credentials" });
     }
@@ -83,16 +83,28 @@ export const updateProfileHandler = async (req, res) => {
         { new: true }
       );
     } else {
-
       const user = await User.findById(userId);
-      if (user.profilePic) {
-        const publicId = user.profilePic.split('/').pop().split('.')[0];
-        await cloudinary.uploader.destroy(publicId);
+      if (user.profilePicId) {
+        await cloudinary.uploader.destroy(user.profilePicId);
       }
-      const upload = await cloudinary.uploader.upload(profilePic);
+
+      const upload = await cloudinary.uploader.upload(profilePic, {
+        folder: "profile_pics",
+        width: 400,
+        height: 400,
+        crop: "thumb",
+        gravity: "auto:face",
+        zoom: 0.7,
+      });
+
       updatedUser = await User.findByIdAndUpdate(
         userId,
-        { fullName, bio, profilePic: upload.secure_url },
+        {
+          fullName,
+          bio,
+          profilePic: upload.secure_url,
+          profilePicId: upload.public_id,
+        },
         { new: true }
       );
     }

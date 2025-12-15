@@ -52,7 +52,7 @@ const Sidebar = ({ setShowDetails }) => {
               </p>
               <hr className="my-2 border-t border-gray-300" />
               <p
-                className="text-sm cursor-pointer text-gray-900"
+                className="text-sm cursor-pointer text-red-600"
                 onClick={logout}
               >
                 Logout
@@ -91,7 +91,7 @@ const Sidebar = ({ setShowDetails }) => {
             <img
               src={user?.profilePic || "/icons/avatar_icon.png"}
               alt="user"
-              className="w-[35px] aspect-square rounded-full"
+              className="w-[35px] aspect-square rounded-full object-cover"
             />
             <div className="flex flex-col leading-5">
               <p>{user.fullName}</p>

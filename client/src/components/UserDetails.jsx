@@ -26,7 +26,7 @@ const UserDetails = ({ setShowDetails }) => {
           <img
             src={selectedUser.profilePic || "/icons/avatar_icon.png"}
             alt="profile"
-            className="w-20 aspect-square rounded-full"
+            className="w-20 aspect-square rounded-full object-cover"
           />
           {onlineUsers.includes(selectedUser._id) && (
             <p className="w-3 h-3 rounded-full bg-green-300 absolute top-1 right-1 border border-white"></p>

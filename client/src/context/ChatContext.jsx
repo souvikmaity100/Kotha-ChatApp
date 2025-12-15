@@ -48,8 +48,6 @@ export const ChatProvider = ({ children }) => {
         messageData
       );
       if (data.success) {
-        console.log("message send....");
-
         setMessages((prev) => [...prev, data.newMsg]);
       } else {
         toast.error(data.message);

@@ -20,6 +20,10 @@ const userSchems = new Schema(
       type: String,
       default: "",
     },
+    profilePicId: {
+      type: String,
+      default: "",
+    },
     bio: {
       type: String,
     },
