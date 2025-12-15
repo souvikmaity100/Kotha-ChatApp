@@ -34,9 +34,6 @@ const LoginPage = () => {
           alt="logo"
           className="w-[min(20vw,120px)]"
         />
-        <h2 className="bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent text-4xl text-center mt-3 font-bold">
-          Kotha
-        </h2>
       </div>
 
       <form
