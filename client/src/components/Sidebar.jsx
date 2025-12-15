@@ -81,7 +81,7 @@ const Sidebar = ({ setShowDetails }) => {
             key={ind}
             onClick={() => {
               setSelectedUser(user);
-              setUnseenMessages((prev) => ({...prev, [user._id]: 0}))
+              setUnseenMessages((prev) => ({ ...prev, [user._id]: 0 }));
               setShowDetails(false);
             }}
             className={`relative flex items-center gap-2 p-2 pl-4 rounded-4xl cursor-pointer max-sm:text-sm ${

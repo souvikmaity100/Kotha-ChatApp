@@ -40,7 +40,8 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
     if (selectedUser) {
       getMessages(selectedUser._id);
     }
-  }, [selectedUser, getMessages]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedUser]);
 
   useEffect(() => {
     if (scrollEnd.current && messages) {
