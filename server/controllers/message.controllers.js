@@ -56,7 +56,7 @@ export const getMessagesHandler = async (req, res) => {
 export const markMessageAsSeenHandler = async (req, res) => {
   try {
     const { id } = req.params;
-    await Message.findByIdAndDelete(id, { seen: true });
+    await Message.findByIdAndUpdate(id, { seen: true });
     res.json({ success: true });
   } catch (error) {
     console.log(error.message);
@@ -83,18 +83,20 @@ export const sendMessageHandler = async (req, res) => {
       imageUrl = uploadResp.secure_url;
     }
 
-    const newMsg = await Message.create(
-      [{ senderId, receiverId, text, image: imageUrl }],
-      { writeConcern: { w: "majority" } }
-    );
+    const newMsg = await Message.create({
+      senderId,
+      receiverId,
+      text: text || "",
+      image: imageUrl || null,
+    });
 
     // Emit the new message to the reciver's socket
     const reciverSocketId = userSocketMap[receiverId];
     if (reciverSocketId) {
-      io.to(reciverSocketId).emit("newMsg", newMsg[0]);
+      io.to(reciverSocketId).emit("newMsg", newMsg);
     }
 
-    res.json({ success: true, newMsg });
+    res.json({ success: true, newMsg: newMsg });
   } catch (error) {
     console.log(error.message);
     res.json({ success: false, messgae: error.message });
