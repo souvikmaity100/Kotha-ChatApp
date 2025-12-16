@@ -1,5 +1,3 @@
-import PropTypes from "prop-types";
-
 const ImagePreviewModal = ({ url, onClose }) => {
   if (!url) return null;
 
@@ -20,11 +18,4 @@ const ImagePreviewModal = ({ url, onClose }) => {
   );
 };
 
-ImagePreviewModal.propTypes = {
-  url: PropTypes.string,
-  onClose: PropTypes.func.isRequired,
-};
-
 export default ImagePreviewModal;
-
-
