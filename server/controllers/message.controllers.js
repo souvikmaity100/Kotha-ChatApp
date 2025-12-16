@@ -35,18 +35,44 @@ export const getMessagesHandler = async (req, res) => {
     const { id: selectedUserId } = req.params;
     const userId = req.user._id;
 
-    const messages = await Message.find({
+    // Pagination controls
+    const limit = Math.min(parseInt(req.query.limit, 10) || 30, 50); // cap at 50
+    const skip = Math.max(parseInt(req.query.skip, 10) || 0, 0);
+
+    const baseQuery = {
       $or: [
         { senderId: userId, receiverId: selectedUserId },
         { senderId: selectedUserId, receiverId: userId },
       ],
-    });
-    await Message.updateMany(
-      { senderId: selectedUserId, receiverId: userId },
-      { seen: true }
-    );
+    };
 
-    res.json({ success: true, messages });
+    const totalCount = await Message.countDocuments(baseQuery);
+
+    // Fetch latest messages first, then reverse for chronological order
+    const messagesDesc = await Message.find(baseQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const messages = messagesDesc.reverse();
+
+    // Mark only the fetched messages (from selectedUser to current user) as seen
+    const toMarkSeen = messagesDesc
+      .filter(
+        (msg) =>
+          msg.senderId.toString() === selectedUserId &&
+          msg.receiverId.toString() === userId.toString() &&
+          !msg.seen
+      )
+      .map((msg) => msg._id);
+
+    if (toMarkSeen.length) {
+      await Message.updateMany({ _id: { $in: toMarkSeen } }, { seen: true });
+    }
+
+    const hasMore = skip + messagesDesc.length < totalCount;
+
+    res.json({ success: true, messages, hasMore });
   } catch (error) {
     console.log(error.message);
     res.json({ success: false, messgae: error.message });

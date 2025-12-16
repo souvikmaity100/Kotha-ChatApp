@@ -10,6 +10,8 @@ export const ChatProvider = ({ children }) => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [unseenMessages, setUnseenMessages] = useState({});
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const { socket, axios } = useContext(AuthContext);
 
@@ -28,16 +30,48 @@ export const ChatProvider = ({ children }) => {
   };
 
   //  Get selected user messages
-  const getMessages = async (userId) => {
+  const getMessages = async (
+    userId,
+    { skip = 0, limit = 30, replace = true } = {}
+  ) => {
+    if (!userId) return;
+    if (replace) {
+      setMessages([]);
+      setHasMoreMessages(true);
+    }
+
     try {
-      const { data } = await axios.get(`/api/messages/${userId}`);
+      const { data } = await axios.get(`/api/messages/${userId}`, {
+        params: { skip, limit },
+      });
       if (data.success) {
-        setMessages(data.messages);
+        setHasMoreMessages(Boolean(data.hasMore));
+
+        setMessages((prev) => {
+          if (replace) return data.messages;
+
+          // Prepend older messages, avoiding duplicates
+          const existingIds = new Set(prev.map((m) => m._id));
+          const incoming = data.messages.filter((m) => !existingIds.has(m._id));
+          return [...incoming, ...prev];
+        });
       }
     } catch (error) {
       console.log(error);
       toast.error(error.message);
     }
+  };
+
+  const loadMoreMessages = async ({ limit = 15 } = {}) => {
+    if (!selectedUser || isLoadingMore || !hasMoreMessages) return;
+
+    setIsLoadingMore(true);
+    await getMessages(selectedUser._id, {
+      skip: messages.length,
+      limit,
+      replace: false,
+    });
+    setIsLoadingMore(false);
   };
 
   //  Send a message
@@ -93,9 +127,12 @@ export const ChatProvider = ({ children }) => {
     users,
     selectedUser,
     unseenMessages,
+    hasMoreMessages,
+    isLoadingMore,
     getMessages,
     getUsers,
     sendMessage,
+    loadMoreMessages,
     setSelectedUser,
     setUnseenMessages,
   };

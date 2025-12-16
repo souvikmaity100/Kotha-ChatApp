@@ -7,9 +7,20 @@ import toast from "react-hot-toast";
 
 const ChatContainer = ({ showDetails, setShowDetails }) => {
   const scrollEnd = useRef(null);
+  const chatBoxRef = useRef(null);
+  const isAtBottomRef = useRef(true);
+  const [showBackToBottom, setShowBackToBottom] = useState(false);
 
-  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } =
-    useContext(ChatContext);
+  const {
+    messages,
+    selectedUser,
+    setSelectedUser,
+    sendMessage,
+    getMessages,
+    loadMoreMessages,
+    hasMoreMessages,
+    isLoadingMore,
+  } = useContext(ChatContext);
   const { authUser, onlineUsers } = useContext(AuthContext);
   const [input, setInput] = useState("");
   const [imageLoading, setImageLoading] = useState(false);
@@ -41,16 +52,21 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
 
   useEffect(() => {
     if (selectedUser) {
-      getMessages(selectedUser._id);
+      getMessages(selectedUser._id, { limit: 30, skip: 0, replace: true });
+      isAtBottomRef.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUser]);
 
   useEffect(() => {
-    if (scrollEnd.current && messages) {
+    if (!scrollEnd.current || !messages?.length) return;
+    const last = messages[messages.length - 1];
+    const fromSelf = last?.senderId === authUser?._id;
+    const nearBottom = isAtBottomRef.current;
+    if (nearBottom || fromSelf) {
       scrollEnd.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [selectedUser, messages]);
+  }, [messages, selectedUser, authUser]);
 
   return selectedUser ? (
     <section className="h-full overflow-scroll relative backdrop-blur-lg">
@@ -93,7 +109,35 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
         </p>
       )}
       {/* ---------------------- Chat Area Section ---------------------- */}
-      <div className="flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6">
+      <div
+        ref={chatBoxRef}
+        onScroll={async () => {
+          const el = chatBoxRef.current;
+          if (!el) return;
+
+          // Track whether user is near the bottom to decide auto-scroll on new messages
+          const distanceFromBottom =
+            el.scrollHeight - el.scrollTop - el.clientHeight;
+          isAtBottomRef.current = distanceFromBottom < 120;
+          setShowBackToBottom(
+            !isAtBottomRef.current && distanceFromBottom > 200
+          );
+
+          if (isLoadingMore || !hasMoreMessages) return;
+          if (el.scrollTop <= 40) {
+            const prevHeight = el.scrollHeight;
+            const prevTop = el.scrollTop;
+            await loadMoreMessages({ limit: 15 });
+            // Maintain scroll position after prepending messages
+            setTimeout(() => {
+              const newHeight = el.scrollHeight;
+              const delta = newHeight - prevHeight;
+              el.scrollTop = prevTop + delta;
+            }, 0);
+          }
+        }}
+        className="flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6"
+      >
         {messages.length > 0 ? (
           messages.map((msg, ind) => (
             <div
@@ -178,6 +222,25 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
           className="w-10 cursor-pointer"
         />
       </div>
+
+      {showBackToBottom && (
+        <button
+          onClick={() => {
+            if (scrollEnd.current) {
+              scrollEnd.current.scrollIntoView({ behavior: "smooth" });
+              isAtBottomRef.current = true;
+              setShowBackToBottom(false);
+            }
+          }}
+          className="absolute right-4 bottom-20 p-2 rounded-full bg-orange-600 text-white text-xs shadow-lg hover:bg-orange-500 transition cursor-pointer shadow-black/20"
+        >
+          <img
+            src="/icons/arrow_icon.png"
+            alt="bottom"
+            className="-rotate-90 h-8 w-8 aspect-square object-contain"
+          />
+        </button>
+      )}
 
       {/* ------------------- User Details Section ------------------- */}
       {showDetails && <UserDetails setShowDetails={setShowDetails} />}
