@@ -43,7 +43,12 @@ app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter);
 
 connectDB().then(() => {
-  server.listen(process.env.PORT || 5000, () =>
-    console.log(`Server Started on PORT: ${process.env.PORT || 5000}`)
-  );
+  if (process.env.NODE_ENV !== "production") {
+    server.listen(process.env.PORT || 5000, () =>
+      console.log(`Server Started on PORT: ${process.env.PORT || 5000}`)
+    );
+  }
 });
+
+// Export server for vercel deployment
+export default server;
