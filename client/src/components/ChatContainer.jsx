@@ -3,6 +3,7 @@ import { formatMsgTime } from "../lib/utils";
 import UserDetails from "./UserDetails";
 import { AuthContext } from "../context/AuthContext";
 import { ChatContext } from "../context/ChatContext";
+import ImagePreviewModal from "./ImagePreviewModal";
 import toast from "react-hot-toast";
 
 const ChatContainer = ({ showDetails, setShowDetails }) => {
@@ -10,6 +11,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
   const chatBoxRef = useRef(null);
   const isAtBottomRef = useRef(true);
   const [showBackToBottom, setShowBackToBottom] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   const {
     messages,
@@ -142,23 +144,27 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
           messages.map((msg, ind) => (
             <div
               key={ind}
-              className={`flex items-end gap-2 justify-end ${
-                msg.senderId !== authUser._id && "flex-row-reverse"
-              }`}
+              className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && "flex-row-reverse"
+                }`}
             >
               {msg.image ? (
-                <img
-                  src={msg.image}
-                  alt="img"
-                  className="max-w-[230px] border border-gray-300 rounded-lg overflow-hidden mb-4"
-                />
+                <button
+                  type="button"
+                  onClick={() => setPreviewUrl(msg.image)}
+                  className="max-w-[230px] border border-gray-300 rounded-lg overflow-hidden mb-4 cursor-pointer"
+                >
+                  <img
+                    src={msg.image}
+                    alt="img"
+                    className="w-full h-full object-cover"
+                  />
+                </button>
               ) : (
                 <p
-                  className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-4 break-all text-white ${
-                    msg.senderId === authUser._id
+                  className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-4 break-all text-white ${msg.senderId === authUser._id
                       ? "rounded-br-none bg-gray-600/75"
                       : "rounded-bl-none bg-orange-600/75"
-                  }`}
+                    }`}
                 >
                   {msg.text}
                 </p>
@@ -171,9 +177,8 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
                       : selectedUser?.profilePic || "/icons/avatar_icon.png"
                   }
                   alt="user"
-                  className={`w-7 h-7 object-cover rounded-full ${
-                    msg.senderId !== authUser._id && "ms-auto"
-                  }`}
+                  className={`w-7 h-7 object-cover rounded-full ${msg.senderId !== authUser._id && "ms-auto"
+                    }`}
                 />
                 <p className="text-gray-200">{formatMsgTime(msg.createdAt)}</p>
               </div>
@@ -241,6 +246,8 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
           />
         </button>
       )}
+
+      <ImagePreviewModal url={previewUrl} onClose={() => setPreviewUrl(null)} />
 
       {/* ------------------- User Details Section ------------------- */}
       {showDetails && <UserDetails setShowDetails={setShowDetails} />}

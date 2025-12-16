@@ -2,6 +2,7 @@ import { Router } from "express";
 import { userAuth } from "../middlewares/auth.js";
 import {
   getMessagesHandler,
+  getMediaHandler,
   getUsersHandler,
   markMessageAsSeenHandler,
   sendMessageHandler,
@@ -11,6 +12,7 @@ const messageRouter = Router();
 
 messageRouter.get("/users", userAuth, getUsersHandler);
 messageRouter.get("/:id", userAuth, getMessagesHandler);
+messageRouter.get("/:id/media", userAuth, getMediaHandler);
 messageRouter.put("/mark/:id", userAuth, markMessageAsSeenHandler);
 messageRouter.post("/send/:id", userAuth, sendMessageHandler);
 

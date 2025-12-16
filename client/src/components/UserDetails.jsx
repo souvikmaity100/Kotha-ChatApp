@@ -1,17 +1,27 @@
 import { useContext, useEffect, useState } from "react";
 import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContext";
+import ImagePreviewModal from "./ImagePreviewModal";
 
 const UserDetails = ({ setShowDetails }) => {
-  const { selectedUser, messages } = useContext(ChatContext);
+  const {
+    selectedUser,
+    media,
+    getMedia,
+    loadMoreMedia,
+    hasMoreMedia,
+    isLoadingMedia,
+  } = useContext(ChatContext);
   const { onlineUsers } = useContext(AuthContext);
-  const [msgImages, setMsgImages] = useState([]);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-  // get all images from chat
+  // Load initial media on open
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMsgImages(messages.filter((msg) => msg.image).map((msg) => msg.image));
-  }, [messages]);
+    if (selectedUser?._id) {
+      getMedia(selectedUser._id, { skip: 0, limit: 6, replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedUser?._id]);
 
   return (
     <section className="absolute top-0 left-0 h-full w-full bg-orange-500 text-white flex flex-col">
@@ -41,16 +51,31 @@ const UserDetails = ({ setShowDetails }) => {
       <div className="px-5 text-xs ">
         <p>Media</p>
         <div className="mt-2 max-h-[400px] overflow-y-scroll grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 opacity-90">
-          {msgImages.length > 0 ? (
-            msgImages.map((url, ind) => (
-              <div key={ind} className="rounded">
-                <img
-                  src={url}
-                  alt="image"
-                  className="h-full rounded-md object-cover"
-                />
-              </div>
-            ))
+          {media.length > 0 ? (
+            <>
+              {media.map((msg) => (
+                <button
+                  key={msg._id}
+                  className="rounded overflow-hidden relative group"
+                  onClick={() => setPreviewUrl(msg.image)}
+                >
+                  <img
+                    src={msg.image}
+                    alt="image"
+                    className="h-full w-full rounded-md object-cover transition duration-200 group-hover:scale-105"
+                  />
+                </button>
+              ))}
+              {hasMoreMedia && (
+                <button
+                  onClick={() => loadMoreMedia({ limit: 6 })}
+                  className="col-span-full py-2 px-3 bg-white/10 text-white rounded-md hover:bg-white/20 transition text-xs cursor-pointer"
+                  disabled={isLoadingMedia}
+                >
+                  {isLoadingMedia ? "Loading..." : "Load more"}
+                </button>
+              )}
+            </>
           ) : (
             <p className="text-gray-200 text-center flex-1 flex items-center justify-center col-span-full">
               No media shared yet.
@@ -58,6 +83,8 @@ const UserDetails = ({ setShowDetails }) => {
           )}
         </div>
       </div>
+
+      <ImagePreviewModal url={previewUrl} onClose={() => setPreviewUrl(null)} />
     </section>
   );
 };

@@ -79,6 +79,39 @@ export const getMessagesHandler = async (req, res) => {
   }
 };
 
+export const getMediaHandler = async (req, res) => {
+  try {
+    const { id: selectedUserId } = req.params;
+    const userId = req.user._id;
+
+    const limit = Math.min(parseInt(req.query.limit, 10) || 6, 24); // cap
+    const skip = Math.max(parseInt(req.query.skip, 10) || 0, 0);
+
+    const baseQuery = {
+      image: { $exists: true, $ne: null },
+      $or: [
+        { senderId: userId, receiverId: selectedUserId },
+        { senderId: selectedUserId, receiverId: userId },
+      ],
+    };
+
+    const totalCount = await Message.countDocuments(baseQuery);
+
+    const media = await Message.find(baseQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .select("_id image createdAt senderId receiverId");
+
+    const hasMore = skip + media.length < totalCount;
+
+    res.json({ success: true, media, hasMore });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, messgae: error.message });
+  }
+};
+
 export const markMessageAsSeenHandler = async (req, res) => {
   try {
     const { id } = req.params;

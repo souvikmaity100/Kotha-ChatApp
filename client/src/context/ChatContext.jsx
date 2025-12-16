@@ -12,6 +12,9 @@ export const ChatProvider = ({ children }) => {
   const [unseenMessages, setUnseenMessages] = useState({});
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [media, setMedia] = useState([]);
+  const [hasMoreMedia, setHasMoreMedia] = useState(true);
+  const [isLoadingMedia, setIsLoadingMedia] = useState(false);
 
   const { socket, axios } = useContext(AuthContext);
 
@@ -60,6 +63,46 @@ export const ChatProvider = ({ children }) => {
       console.log(error);
       toast.error(error.message);
     }
+  };
+
+  const getMedia = async (
+    userId,
+    { skip = 0, limit = 6, replace = true } = {}
+  ) => {
+    if (!userId) return;
+    if (replace) {
+      setMedia([]);
+      setHasMoreMedia(true);
+    }
+
+    try {
+      const { data } = await axios.get(`/api/messages/${userId}/media`, {
+        params: { skip, limit },
+      });
+      if (data.success) {
+        setHasMoreMedia(Boolean(data.hasMore));
+        setMedia((prev) => {
+          if (replace) return data.media || [];
+          const existing = new Set(prev.map((m) => m._id));
+          const incoming = (data.media || []).filter((m) => !existing.has(m._id));
+          return [...prev, ...incoming];
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
+    }
+  };
+
+  const loadMoreMedia = async ({ limit = 6 } = {}) => {
+    if (!selectedUser || isLoadingMedia || !hasMoreMedia) return;
+    setIsLoadingMedia(true);
+    await getMedia(selectedUser._id, {
+      skip: media.length,
+      limit,
+      replace: false,
+    });
+    setIsLoadingMedia(false);
   };
 
   const loadMoreMessages = async ({ limit = 15 } = {}) => {
@@ -124,15 +167,20 @@ export const ChatProvider = ({ children }) => {
 
   const value = {
     messages,
+    media,
     users,
     selectedUser,
     unseenMessages,
     hasMoreMessages,
     isLoadingMore,
+    hasMoreMedia,
+    isLoadingMedia,
     getMessages,
+    getMedia,
     getUsers,
     sendMessage,
     loadMoreMessages,
+    loadMoreMedia,
     setSelectedUser,
     setUnseenMessages,
   };
