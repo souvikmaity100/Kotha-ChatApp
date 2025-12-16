@@ -12,6 +12,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
     useContext(ChatContext);
   const { authUser, onlineUsers } = useContext(AuthContext);
   const [input, setInput] = useState("");
+  const [imageLoading, setImageLoading] = useState(false);
 
   // sending a message
   const handleSendMessage = async (e) => {
@@ -28,9 +29,11 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
       toast.error("Select an image file");
       return;
     }
+    setImageLoading(true);
     const reader = new FileReader();
     reader.onloadend = async () => {
       await sendMessage({ image: reader.result });
+      setImageLoading(false);
       e.target.value = "";
     };
     reader.readAsDataURL(file);
@@ -40,7 +43,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
     if (selectedUser) {
       getMessages(selectedUser._id);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUser]);
 
   useEffect(() => {
@@ -81,46 +84,62 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
         />
       </div>
 
+      {imageLoading && (
+        <p className="flex-1 flex items-center justify-center absolute top-0 left-0 w-full h-full">
+          <div className="text-white bg-orange-600/75 text-center py-5 px-10 rounded-lg animate-pulse mr-3">
+            <div className="w-5 h-5 border-t-2 border-r-2 border-white rounded-full animate-spin mx-auto"></div>
+            Uploading image...
+          </div>
+        </p>
+      )}
       {/* ---------------------- Chat Area Section ---------------------- */}
       <div className="flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6">
-        {messages.map((msg, ind) => (
-          <div
-            key={ind}
-            className={`flex items-end gap-2 justify-end ${
-              msg.senderId !== authUser._id && "flex-row-reverse"
-            }`}
-          >
-            {msg.image ? (
-              <img
-                src={msg.image}
-                alt="img"
-                className="max-w-[230px] border border-gray-300 rounded-lg overflow-hidden mb-8"
-              />
-            ) : (
-              <p
-                className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-4 break-all text-white ${
-                  msg.senderId === authUser._id
-                    ? "rounded-br-none bg-gray-600/75"
-                    : "rounded-bl-none bg-orange-600/75"
-                }`}
-              >
-                {msg.text}
-              </p>
-            )}
-            <div className="text-center text-xs">
-              <img
-                src={
-                  msg.senderId === authUser._id
-                    ? authUser?.profilePic || "/icons/avatar_icon.png"
-                    : selectedUser?.profilePic || "/icons/avatar_icon.png"
-                }
-                alt="user"
-                className="w-7 h-7 object-cover rounded-full"
-              />
-              <p className="text-gray-200">{formatMsgTime(msg.createdAt)}</p>
+        {messages.length > 0 ? (
+          messages.map((msg, ind) => (
+            <div
+              key={ind}
+              className={`flex items-end gap-2 justify-end ${
+                msg.senderId !== authUser._id && "flex-row-reverse"
+              }`}
+            >
+              {msg.image ? (
+                <img
+                  src={msg.image}
+                  alt="img"
+                  className="max-w-[230px] border border-gray-300 rounded-lg overflow-hidden mb-4"
+                />
+              ) : (
+                <p
+                  className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-4 break-all text-white ${
+                    msg.senderId === authUser._id
+                      ? "rounded-br-none bg-gray-600/75"
+                      : "rounded-bl-none bg-orange-600/75"
+                  }`}
+                >
+                  {msg.text}
+                </p>
+              )}
+              <div className="flex flex-col text-xs">
+                <img
+                  src={
+                    msg.senderId === authUser._id
+                      ? authUser?.profilePic || "/icons/avatar_icon.png"
+                      : selectedUser?.profilePic || "/icons/avatar_icon.png"
+                  }
+                  alt="user"
+                  className={`w-7 h-7 object-cover rounded-full ${
+                    msg.senderId !== authUser._id && "ms-auto"
+                  }`}
+                />
+                <p className="text-gray-200">{formatMsgTime(msg.createdAt)}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <p className="text-gray-200 text-center flex-1 flex items-center justify-center">
+            No messages yet. Say hello!
+          </p>
+        )}
         <div ref={scrollEnd}></div>
       </div>
 

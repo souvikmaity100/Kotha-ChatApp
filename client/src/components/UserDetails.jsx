@@ -14,7 +14,7 @@ const UserDetails = ({ setShowDetails }) => {
   }, [messages]);
 
   return (
-    <section className="absolute top-0 left-0 h-full w-full bg-orange-500 text-white">
+    <section className="absolute top-0 left-0 h-full w-full bg-orange-500 text-white flex flex-col">
       <img
         src="/icons/arrow_icon.png"
         alt="arrow"
@@ -26,7 +26,7 @@ const UserDetails = ({ setShowDetails }) => {
           <img
             src={selectedUser.profilePic || "/icons/avatar_icon.png"}
             alt="profile"
-            className="w-20 aspect-square rounded-full object-cover"
+            className="w-20 aspect-square rounded-full object-cover border-2 border-gray-200"
           />
           {onlineUsers.includes(selectedUser._id) && (
             <p className="w-3 h-3 rounded-full bg-green-300 absolute top-1 right-1 border border-white"></p>
@@ -38,14 +38,24 @@ const UserDetails = ({ setShowDetails }) => {
         <p className="px-10 mx-auto">{selectedUser.bio}</p>
       </div>
       <hr className="border-[#ffffff50] my-4" />
-      <div className="px-5 text-xs">
+      <div className="px-5 text-xs ">
         <p>Media</p>
         <div className="mt-2 max-h-[400px] overflow-y-scroll grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 opacity-90">
-          {msgImages.map((url, ind) => (
-            <div key={ind} className="rounded">
-              <img src={url} alt="image" className="h-full rounded-md" />
-            </div>
-          ))}
+          {msgImages.length > 0 ? (
+            msgImages.map((url, ind) => (
+              <div key={ind} className="rounded">
+                <img
+                  src={url}
+                  alt="image"
+                  className="h-full rounded-md object-cover"
+                />
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-200 text-center flex-1 flex items-center justify-center col-span-full">
+              No media shared yet.
+            </p>
+          )}
         </div>
       </div>
     </section>
