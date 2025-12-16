@@ -26,6 +26,8 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
   const { authUser, onlineUsers } = useContext(AuthContext);
   const [input, setInput] = useState("");
   const [imageLoading, setImageLoading] = useState(false);
+  const [pendingImage, setPendingImage] = useState(null);
+  const [pendingImageText, setPendingImageText] = useState("");
 
   // sending a message
   const handleSendMessage = async (e) => {
@@ -42,14 +44,35 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
       toast.error("Select an image file");
       return;
     }
-    setImageLoading(true);
     const reader = new FileReader();
-    reader.onloadend = async () => {
-      await sendMessage({ image: reader.result });
-      setImageLoading(false);
+    reader.onloadend = () => {
+      // Store locally for preview; actual upload happens when user clicks Send
+      setPendingImage(reader.result);
       e.target.value = "";
     };
     reader.readAsDataURL(file);
+  };
+
+  // Send the currently selected image with optional text (caption)
+  const handleSendImagePreview = async () => {
+    if (!pendingImage) return;
+
+    const imageToSend = pendingImage;
+    const textToSend = pendingImageText.trim();
+
+    // Immediately clear preview and caption from UI
+    setPendingImage(null);
+    setPendingImageText("");
+
+    try {
+      setImageLoading(true);
+      await sendMessage({
+        image: imageToSend,
+        ...(textToSend ? { text: textToSend } : {}),
+      });
+    } finally {
+      setImageLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -148,22 +171,32 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
                 }`}
             >
               {msg.image ? (
-                <button
-                  type="button"
-                  onClick={() => setPreviewUrl(msg.image)}
-                  className="max-w-[230px] border border-gray-300 rounded-lg overflow-hidden mb-4 cursor-pointer"
-                >
-                  <img
-                    src={msg.image}
-                    alt="img"
-                    className="w-full h-full object-cover"
-                  />
-                </button>
+                <div className="max-w-[230px] mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewUrl(msg.image)}
+                    className="w-full border border-gray-300 rounded-lg overflow-hidden cursor-pointer"
+                  >
+                    <img
+                      src={msg.image}
+                      alt="img"
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                  {msg.text && msg.text.trim() !== "" && (
+                    <p className={`md:text-sm text-white bg-black/40 px-2 py-1 rounded-md break-all ${msg.senderId === authUser._id
+                      ? "rounded-br-none bg-gray-600/75"
+                      : "rounded-bl-none bg-orange-600/75"
+                      }`}>
+                      {msg.text}
+                    </p>
+                  )}
+                </div>
               ) : (
                 <p
                   className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-4 break-all text-white ${msg.senderId === authUser._id
-                      ? "rounded-br-none bg-gray-600/75"
-                      : "rounded-bl-none bg-orange-600/75"
+                    ? "rounded-br-none bg-gray-600/75"
+                    : "rounded-bl-none bg-orange-600/75"
                     }`}
                 >
                   {msg.text}
@@ -193,39 +226,81 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
       </div>
 
       {/* --------------------- Chat Bottom Section --------------------- */}
-      <div className="absolute bottom-0 right-0 flex items-center gap-3 p-3 w-full">
-        <div className="flex-1 flex items-center bg-gray-100/20 px-3 rounded-full">
-          <input
-            type="text"
-            name="msg"
-            placeholder="Send a message. . ."
-            className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-300"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => (e.key === "Enter" ? handleSendMessage(e) : null)}
-          />
-          <input
-            type="file"
-            name="image"
-            id="image"
-            accept="image/png, image/jpeg"
-            hidden
-            onChange={handleSendImage}
-          />
-          <label htmlFor="image" className="cursor-pointer">
-            <img
-              src="/icons/gallery_icon.svg"
-              alt="gallery_icon"
-              className="w-5 mr-2"
+      <div className="absolute bottom-0 right-0 flex flex-col gap-2 p-3 w-full">
+        {pendingImage && (
+          <div className="flex items-center gap-3 bg-gray-900/70 px-3 py-2 rounded-xl border border-white/10">
+            <div className="w-14 h-14 rounded-lg overflow-hidden border border-white/20">
+              <img
+                src={pendingImage}
+                alt="preview"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <input
+              type="text"
+              placeholder="Add a caption..."
+              className="flex-1 text-xs bg-transparent border border-white/20 rounded-full px-3 py-1 text-white placeholder:text-gray-300 outline-none"
+              value={pendingImageText}
+              onChange={(e) => setPendingImageText(e.target.value)}
             />
-          </label>
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingImage(null);
+                  setPendingImageText("");
+                }}
+                className="text-xs text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full px-2 py-1 cursor-pointer transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSendImagePreview}
+                className="text-xs text-white bg-orange-500 hover:bg-orange-400 rounded-full px-3 py-1 cursor-pointer transition"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 w-full">
+          <div className="flex-1 flex items-center bg-gray-100/20 px-3 rounded-full">
+            <input
+              type="text"
+              name="msg"
+              placeholder="Send a message. . ."
+              className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-300"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === "Enter" ? handleSendMessage(e) : null
+              }
+            />
+            <input
+              type="file"
+              name="image"
+              id="image"
+              accept="image/png, image/jpeg"
+              hidden
+              onChange={handleSendImage}
+            />
+            <label htmlFor="image" className="cursor-pointer">
+              <img
+                src="/icons/gallery_icon.svg"
+                alt="gallery_icon"
+                className="w-5 mr-2"
+              />
+            </label>
+          </div>
+          <img
+            onClick={handleSendMessage}
+            src="/icons/send_button.svg"
+            alt="send_button"
+            className="w-10 cursor-pointer"
+          />
         </div>
-        <img
-          onClick={handleSendMessage}
-          src="/icons/send_button.svg"
-          alt="send_button"
-          className="w-10 cursor-pointer"
-        />
       </div>
 
       {showBackToBottom && (
