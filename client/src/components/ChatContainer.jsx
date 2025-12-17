@@ -113,7 +113,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
   }, [messages, selectedUser, authUser]);
 
   return selectedUser ? (
-    <section className="h-screen overflow-scroll relative backdrop-blur-lg">
+    <section className="h-screen sm:h-full overflow-scroll relative backdrop-blur-lg">
       {/* ----------------- Chat Header Section ----------------- */}
       <div className="flex items-center gap-3 py-3 mx-4 border-b border-gray-300">
         <img
