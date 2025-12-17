@@ -296,7 +296,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
               type="text"
               name="msg"
               placeholder="Send a message. . ."
-              className="flex-1 shrink text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-300"
+              className="flex-1 shrink text-sm py-3 px-1.5 sm:p-3 border-none rounded-lg outline-none text-white placeholder-gray-300"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) =>

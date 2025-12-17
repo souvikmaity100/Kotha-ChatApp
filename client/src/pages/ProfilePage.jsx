@@ -28,8 +28,8 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cover bg-no-repeat bg-center flex items-center justify-center">
-      <div className="w-5/6 max-w-2xl backdrop-blur-xs text-gray-200 border-2 border-gray-300 flex items-center justify-between rounded-lg">
+    <div className="min-h-screen bg-cover bg-no-repeat bg-center flex items-center justify-center p-1 sm:p-0">
+      <div className="w-full sm:w-5/6 sm:max-w-2xl backdrop-blur-xs text-gray-200 border-2 border-gray-300 flex items-center justify-between rounded-lg">
         <img
           src="/icons/arrow_icon.png"
           alt="arrow"
@@ -37,7 +37,7 @@ const ProfilePage = () => {
           onClick={() => navigate("/")}
         />
         <form
-          className="flex flex-col gap-5 p-10 flex-1"
+          className="flex flex-col gap-5 p-3 sm:p-10 flex-1"
           onSubmit={handleSubmit}
         >
           <label
