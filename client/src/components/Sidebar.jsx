@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { ChatContext } from "../context/ChatContext";
 
@@ -16,6 +16,8 @@ const Sidebar = ({ setShowDetails }) => {
   const navigate = useNavigate();
 
   const [searchInp, setSearchInp] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   const filteredUsers = searchInp
     ? users.filter((user) =>
@@ -27,6 +29,25 @@ const Sidebar = ({ setShowDetails }) => {
     getUsers();
   }, [onlineUsers]);
 
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuOpen]);
+
   return (
     <section
       className={`bg-[#ff6e00]/10 h-full p-4 rounded-r-xl overflow-y-scroll text-white ${
@@ -37,27 +58,37 @@ const Sidebar = ({ setShowDetails }) => {
       <div className="pb-4">
         <div className="flex justify-between items-center">
           <img src="/logo.png" alt="logo" className="max-w-30" />
-          <div className="relative py-2 group">
-            <img
-              src="/icons/menu_icon.png"
-              alt="menu"
-              className="max-h-5 cursor-pointer"
-            />
-            <div className="absolute top-full right-0 z-30 w-32 p-2.5 rounded-md border border-gray-300 bg-white backdrop-blur-xl hidden group-hover:block">
-              <p
-                onClick={() => navigate("/profile")}
-                className="text-sm cursor-pointer text-gray-900"
-              >
-                Edit Profile
-              </p>
-              <hr className="my-2 border-t border-gray-300" />
-              <p
-                className="text-sm cursor-pointer text-red-600"
-                onClick={logout}
-              >
-                Logout
-              </p>
-            </div>
+          <div className="relative py-2" ref={menuRef}>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="flex items-center justify-center max-h-5 cursor-pointer"
+            >
+              <img src="/icons/menu_icon.png" alt="menu" className="max-h-5" />
+            </button>
+            {menuOpen && (
+              <div className="absolute top-full right-0 z-30 w-32 p-2.5 rounded-md border border-gray-300 bg-white backdrop-blur-xl shadow-lg">
+                <button
+                  onClick={() => {
+                    navigate("/profile");
+                    setMenuOpen(false);
+                  }}
+                  className="block w-full text-left text-sm cursor-pointer text-gray-900"
+                >
+                  Edit Profile
+                </button>
+                <hr className="my-2 border-t border-gray-300" />
+                <button
+                  className="block w-full text-left text-sm cursor-pointer text-red-600"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    logout();
+                  }}
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

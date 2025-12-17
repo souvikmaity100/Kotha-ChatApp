@@ -167,7 +167,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
           messages.map((msg, ind) => (
             <div
               key={ind}
-              className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && "flex-row-reverse"
+              className={`mt-1 flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && "flex-row-reverse"
                 }`}
             >
               {msg.image ? (
@@ -184,7 +184,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
                     />
                   </button>
                   {msg.text && msg.text.trim() !== "" && (
-                    <p className={`md:text-sm text-white bg-black/40 px-2 py-1 rounded-md break-all ${msg.senderId === authUser._id
+                    <p className={`test-xs md:text-sm text-white bg-black/40 px-2 py-1 rounded-md break-all ${msg.senderId === authUser._id
                       ? "rounded-br-none bg-gray-600/75"
                       : "rounded-bl-none bg-orange-600/75"
                       }`}>
@@ -194,7 +194,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
                 </div>
               ) : (
                 <p
-                  className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-4 break-all text-white ${msg.senderId === authUser._id
+                  className={`p-2 max-w-[200px] text-xs md:text-sm font-light rounded-lg mb-4 break-all text-white ${msg.senderId === authUser._id
                     ? "rounded-br-none bg-gray-600/75"
                     : "rounded-bl-none bg-orange-600/75"
                     }`}
@@ -226,7 +226,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
       </div>
 
       {/* --------------------- Chat Bottom Section --------------------- */}
-      <div className="absolute bottom-0 right-0 flex flex-col gap-2 p-3 w-full">
+      <div className="absolute bottom-0 right-0 flex flex-col gap-2 p-1 sm:p-3 w-full">
         {pendingImage && (
           <div className="flex items-center gap-3 bg-gray-900/70 px-3 py-2 rounded-xl border border-white/10">
             <div className="w-14 h-14 rounded-lg overflow-hidden border border-white/20">
@@ -265,13 +265,13 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
           </div>
         )}
 
-        <div className="flex items-center gap-3 w-full">
-          <div className="flex-1 flex items-center bg-gray-100/20 px-3 rounded-full">
+        <div className="flex items-center gap-1 sm:gap-2 w-full">
+          <div className="flex-1 shrink flex items-center bg-gray-100/20 px-3 rounded-full">
             <input
               type="text"
               name="msg"
               placeholder="Send a message. . ."
-              className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-300"
+              className="flex-1 shrink text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-300"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) =>
