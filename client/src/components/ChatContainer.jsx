@@ -207,7 +207,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
                     />
                   </button>
                   {msg.text && msg.text.trim() !== "" && (
-                    <p className={`test-xs md:text-sm text-white bg-black/40 px-2 py-1 rounded-md break-all ${msg.senderId === authUser._id
+                    <p className={`text-xs md:text-sm text-white bg-black/40 px-2 py-1 rounded-md break-all ${msg.senderId === authUser._id
                       ? "rounded-br-none bg-gray-600/75"
                       : "rounded-bl-none bg-orange-600/75"
                       }`}>
