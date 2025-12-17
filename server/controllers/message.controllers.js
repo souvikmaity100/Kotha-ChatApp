@@ -2,9 +2,12 @@ import Message from "../models/message.models.js";
 import User from "../models/User.models.js";
 import cloudinary from "../utils/cloudnary.js";
 import { io, userSocketMap } from "../index.js";
+import { connectDB } from "../db/index.js";
 
 export const getUsersHandler = async (req, res) => {
   try {
+    await connectDB(); // Call DB fro Vercel Serverless Environment
+
     const userId = req.user._id;
     const filteredUsers = await User.find({ _id: { $ne: userId } }).select(
       "-password"
@@ -32,6 +35,8 @@ export const getUsersHandler = async (req, res) => {
 
 export const getMessagesHandler = async (req, res) => {
   try {
+    await connectDB(); // Call DB fro Vercel Serverless Environment
+
     const { id: selectedUserId } = req.params;
     const userId = req.user._id;
 
@@ -81,6 +86,8 @@ export const getMessagesHandler = async (req, res) => {
 
 export const getMediaHandler = async (req, res) => {
   try {
+    await connectDB(); // Call DB fro Vercel Serverless Environment
+
     const { id: selectedUserId } = req.params;
     const userId = req.user._id;
 
@@ -114,6 +121,8 @@ export const getMediaHandler = async (req, res) => {
 
 export const markMessageAsSeenHandler = async (req, res) => {
   try {
+    await connectDB(); // Call DB fro Vercel Serverless Environment
+
     const { id } = req.params;
     await Message.findByIdAndUpdate(id, { seen: true });
     res.json({ success: true });
@@ -125,6 +134,8 @@ export const markMessageAsSeenHandler = async (req, res) => {
 
 export const sendMessageHandler = async (req, res) => {
   try {
+    await connectDB(); // Call DB fro Vercel Serverless Environment
+
     const { text, image } = req.body;
     const receiverId = req.params.id;
     const senderId = req.user._id;

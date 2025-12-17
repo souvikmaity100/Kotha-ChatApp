@@ -2,9 +2,12 @@ import User from "../models/User.models.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/jwtToken.js";
 import cloudinary from "../utils/cloudnary.js";
+import { connectDB } from "../db/index.js";
 
 export const signUpHandler = async (req, res) => {
   try {
+    await connectDB(); // Call DB fro Vercel Serverless Environment
+
     const { fullName, email, password, bio } = req.body;
 
     if (!fullName || !email || !password || !bio) {
@@ -39,6 +42,8 @@ export const signUpHandler = async (req, res) => {
 
 export const signInHandler = async (req, res) => {
   try {
+    await connectDB(); // Call DB fro Vercel Serverless Environment
+
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -73,6 +78,8 @@ export const checkAuthHandler = async (req, res) => {
 
 export const updateProfileHandler = async (req, res) => {
   try {
+    await connectDB(); // Call DB fro Vercel Serverless Environment
+
     const { profilePic, bio, fullName } = req.body;
     const userId = req.user._id;
     let updatedUser;
