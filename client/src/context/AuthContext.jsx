@@ -15,20 +15,25 @@ export const AuthProvider = ({ children }) => {
   const [authUser, setAuthUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [socket, setSocket] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   //  Check if user is authenticated
-  const checkAuth = () => {
-    axios
-      .get("/api/auth")
-      .then(({ data }) => {
-        if (data.success) {
-          setAuthUser(data.userData);
-          connectSocket(data.userData);
-        }
-      })
-      .catch((error) => {
-        toast.error(error.message);
-      });
+  const checkAuth = async () => {
+    try {
+      setAuthLoading(true);
+      const { data } = await axios.get("/api/auth");
+      if (data.success) {
+        setAuthUser(data.userData);
+        connectSocket(data.userData);
+      } else {
+        setAuthUser(null);
+      }
+    } catch (error) {
+      // On auth failure, just ensure user is logged out state; avoid flashing error on every refresh
+      setAuthUser(null);
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
   //  Login function for auth & socket connection
@@ -93,13 +98,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (token) axios.defaults.headers.common["token"] = token;
-    checkAuth();
+    (async () => {
+      if (token) axios.defaults.headers.common["token"] = token;
+      await checkAuth();
+    })();
   }, []);
 
   const value = {
     axios,
     authUser,
+    authLoading,
     onlineUsers,
     socket,
     login,

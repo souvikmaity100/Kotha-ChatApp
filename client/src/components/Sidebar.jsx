@@ -18,6 +18,7 @@ const Sidebar = ({ setShowDetails }) => {
   const [searchInp, setSearchInp] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const [usersLoading, setUsersLoading] = useState(false);
 
   const filteredUsers = searchInp
     ? users.filter((user) =>
@@ -26,7 +27,13 @@ const Sidebar = ({ setShowDetails }) => {
     : users;
 
   useEffect(() => {
-    getUsers();
+    const loadUsers = async () => {
+      setUsersLoading(true);
+      await getUsers();
+      setUsersLoading(false);
+    };
+
+    loadUsers();
   }, [onlineUsers]);
 
   // Close profile menu when clicking outside
@@ -107,38 +114,55 @@ const Sidebar = ({ setShowDetails }) => {
 
       {/* --------------------- User List Section --------------------- */}
       <div className="flex flex-col">
-        {filteredUsers.map((user, ind) => (
-          <div
-            key={ind}
-            onClick={() => {
-              setSelectedUser(user);
-              setUnseenMessages((prev) => ({ ...prev, [user._id]: 0 }));
-              setShowDetails(false);
-            }}
-            className={`relative flex items-center gap-2 p-2 pl-4 rounded-4xl cursor-pointer max-sm:text-sm ${
-              selectedUser?._id === user._id && "bg-orange-500/75"
-            }`}
-          >
-            <img
-              src={user?.profilePic || "/icons/avatar_icon.png"}
-              alt="user"
-              className="w-[35px] aspect-square rounded-full object-cover"
-            />
-            <div className="flex flex-col leading-5">
-              <p>{user.fullName}</p>
-              {onlineUsers.includes(user._id) ? (
-                <span className="text-green-300 text-xs">Online</span>
-              ) : (
-                <span className="text-neutral-300 text-xs">Offline</span>
+        {usersLoading ? (
+          <div className="flex flex-col gap-3 mt-2">
+            {[1, 2, 3, 4].map((skeleton) => (
+              <div
+                key={skeleton}
+                className="flex items-center gap-2 p-2 pl-4 rounded-4xl bg-white/5 animate-pulse"
+              >
+                <div className="w-[35px] h-[35px] rounded-full bg-white/20" />
+                <div className="flex flex-col gap-1 flex-1">
+                  <div className="h-3 w-24 bg-white/20 rounded" />
+                  <div className="h-2 w-16 bg-white/10 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          filteredUsers.map((user, ind) => (
+            <div
+              key={ind}
+              onClick={() => {
+                setSelectedUser(user);
+                setUnseenMessages((prev) => ({ ...prev, [user._id]: 0 }));
+                setShowDetails(false);
+              }}
+              className={`relative flex items-center gap-2 p-2 pl-4 rounded-4xl cursor-pointer max-sm:text-sm ${
+                selectedUser?._id === user._id && "bg-orange-500/75"
+              }`}
+            >
+              <img
+                src={user?.profilePic || "/icons/avatar_icon.png"}
+                alt="user"
+                className="w-[35px] aspect-square rounded-full object-cover"
+              />
+              <div className="flex flex-col leading-5">
+                <p>{user.fullName}</p>
+                {onlineUsers.includes(user._id) ? (
+                  <span className="text-green-300 text-xs">Online</span>
+                ) : (
+                  <span className="text-neutral-300 text-xs">Offline</span>
+                )}
+              </div>
+              {unseenMessages[user._id] > 0 && (
+                <p className="absolute top-4 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-orange-700/50">
+                  {unseenMessages[user._id]}
+                </p>
               )}
             </div>
-            {unseenMessages[user._id] > 0 && (
-              <p className="absolute top-4 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-orange-700/50">
-                {unseenMessages[user._id]}
-              </p>
-            )}
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </section>
   );

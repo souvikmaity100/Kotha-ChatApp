@@ -10,6 +10,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
   const scrollEnd = useRef(null);
   const chatBoxRef = useRef(null);
   const isAtBottomRef = useRef(true);
+  const lastMessageIdRef = useRef(null);
   const [showBackToBottom, setShowBackToBottom] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
 
@@ -79,6 +80,8 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
   useEffect(() => {
     const loadMessages = async () => {
       if (!selectedUser) return;
+      // Reset last message tracker when switching users
+      lastMessageIdRef.current = null;
       setMessagesLoading(true);
       await getMessages(selectedUser._id, { limit: 30, skip: 0, replace: true });
       setMessagesLoading(false);
@@ -91,12 +94,22 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
 
   useEffect(() => {
     if (!scrollEnd.current || !messages?.length) return;
+
     const last = messages[messages.length - 1];
-    const fromSelf = last?.senderId === authUser?._id;
+    const lastId = last?._id;
+
+    // If there's no new last message (e.g. we just prepended older messages), don't auto-scroll
+    if (!lastId || lastId === lastMessageIdRef.current) return;
+
+    const fromSelf = last.senderId === authUser?._id;
     const nearBottom = isAtBottomRef.current;
+
     if (nearBottom || fromSelf) {
       scrollEnd.current.scrollIntoView({ behavior: "smooth" });
     }
+
+    // Update tracker after handling scroll
+    lastMessageIdRef.current = lastId;
   }, [messages, selectedUser, authUser]);
 
   return selectedUser ? (
