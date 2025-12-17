@@ -26,6 +26,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
   const { authUser, onlineUsers } = useContext(AuthContext);
   const [input, setInput] = useState("");
   const [imageLoading, setImageLoading] = useState(false);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [pendingImage, setPendingImage] = useState(null);
   const [pendingImageText, setPendingImageText] = useState("");
 
@@ -76,10 +77,15 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
   };
 
   useEffect(() => {
-    if (selectedUser) {
-      getMessages(selectedUser._id, { limit: 30, skip: 0, replace: true });
+    const loadMessages = async () => {
+      if (!selectedUser) return;
+      setMessagesLoading(true);
+      await getMessages(selectedUser._id, { limit: 30, skip: 0, replace: true });
+      setMessagesLoading(false);
       isAtBottomRef.current = true;
-    }
+    };
+
+    loadMessages();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUser]);
 
@@ -163,7 +169,11 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
         }}
         className="flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6"
       >
-        {messages.length > 0 ? (
+        {messagesLoading ? (
+          <p className="text-gray-200 text-center flex-1 flex items-center justify-center">
+            Loading messages...
+          </p>
+        ) : messages.length > 0 ? (
           messages.map((msg, ind) => (
             <div
               key={ind}
@@ -228,39 +238,41 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
       {/* --------------------- Chat Bottom Section --------------------- */}
       <div className="absolute bottom-0 right-0 flex flex-col gap-2 p-1 sm:p-3 w-full">
         {pendingImage && (
-          <div className="flex items-center gap-3 bg-gray-900/70 px-3 py-2 rounded-xl border border-white/10">
-            <div className="w-14 h-14 rounded-lg overflow-hidden border border-white/20">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-gray-900/70 px-2 sm:px-3 py-2 rounded-xl border border-white/10">
+            <div className="w-24 h-24 sm:w-16 sm:h-16 rounded-lg overflow-hidden border border-white/20 mx-auto sm:mx-0">
               <img
                 src={pendingImage}
                 alt="preview"
                 className="w-full h-full object-cover"
               />
             </div>
-            <input
-              type="text"
-              placeholder="Add a caption..."
-              className="flex-1 text-xs bg-transparent border border-white/20 rounded-full px-3 py-1 text-white placeholder:text-gray-300 outline-none"
-              value={pendingImageText}
-              onChange={(e) => setPendingImageText(e.target.value)}
-            />
-            <div className="flex items-center gap-2 ml-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  setPendingImage(null);
-                  setPendingImageText("");
-                }}
-                className="text-xs text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full px-2 py-1 cursor-pointer transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSendImagePreview}
-                className="text-xs text-white bg-orange-500 hover:bg-orange-400 rounded-full px-3 py-1 cursor-pointer transition"
-              >
-                Send
-              </button>
+            <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
+              <input
+                type="text"
+                placeholder="Add a caption..."
+                className="w-full text-xs bg-transparent border border-white/20 rounded-full px-3 py-1 text-white placeholder:text-gray-300 outline-none"
+                value={pendingImageText}
+                onChange={(e) => setPendingImageText(e.target.value)}
+              />
+              <div className="flex justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingImage(null);
+                    setPendingImageText("");
+                  }}
+                  className="text-xs text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full px-3 py-1 cursor-pointer transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendImagePreview}
+                  className="text-xs text-white bg-orange-500 hover:bg-orange-400 rounded-full px-4 py-1 cursor-pointer transition"
+                >
+                  Send
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -286,7 +298,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
               hidden
               onChange={handleSendImage}
             />
-            <label htmlFor="image" className="cursor-pointer">
+            <label htmlFor="image" className="cursor-pointer shrink-0">
               <img
                 src="/icons/gallery_icon.svg"
                 alt="gallery_icon"
