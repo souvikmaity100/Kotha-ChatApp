@@ -13,6 +13,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
   const lastMessageIdRef = useRef(null);
   const [showBackToBottom, setShowBackToBottom] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [isSending, setIsSending] = useState(false);
 
   const {
     messages,
@@ -34,9 +35,15 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
   // sending a message
   const handleSendMessage = async (e) => {
     e.preventDefault();
+    if (isSending) return;
     if (input.trim() === "") return null;
-    await sendMessage({ text: input.trim() });
-    setInput("");
+    try {
+      setIsSending(true);
+      await sendMessage({ text: input.trim() });
+      setInput("");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   // Sending an image
@@ -57,20 +64,16 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
 
   // Send the currently selected image with optional text (caption)
   const handleSendImagePreview = async () => {
-    if (!pendingImage) return;
+    if (!pendingImage || imageLoading) return;
 
-    const imageToSend = pendingImage;
-    const textToSend = pendingImageText.trim();
-
-    // Immediately clear preview and caption from UI
     setPendingImage(null);
     setPendingImageText("");
 
     try {
       setImageLoading(true);
       await sendMessage({
-        image: imageToSend,
-        ...(textToSend ? { text: textToSend } : {}),
+        image: pendingImage,
+        ...(pendingImageText.trim() && { text: pendingImageText.trim() }),
       });
     } finally {
       setImageLoading(false);
@@ -83,7 +86,11 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
       // Reset last message tracker when switching users
       lastMessageIdRef.current = null;
       setMessagesLoading(true);
-      await getMessages(selectedUser._id, { limit: 30, skip: 0, replace: true });
+      await getMessages(selectedUser._id, {
+        limit: 30,
+        skip: 0,
+        replace: true,
+      });
       setMessagesLoading(false);
       isAtBottomRef.current = true;
     };
@@ -190,41 +197,55 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
           messages.map((msg, ind) => (
             <div
               key={ind}
-              className={`mt-1 flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && "flex-row-reverse"
-                }`}
+              className={`mt-1 flex items-end gap-2 justify-end mb-2 ${
+                msg.senderId !== authUser._id && "flex-row-reverse"
+              }`}
             >
-              {msg.image ? (
-                <div className="max-w-[230px] mb-4">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewUrl(msg.image)}
-                    className="w-full border border-gray-300 rounded-lg overflow-hidden cursor-pointer"
-                  >
-                    <img
-                      src={msg.image}
-                      alt="img"
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                  {msg.text && msg.text.trim() !== "" && (
-                    <p className={`text-xs md:text-sm text-white bg-black/40 px-2 py-1 rounded-md break-all ${msg.senderId === authUser._id
-                      ? "rounded-br-none bg-gray-600/75"
-                      : "rounded-bl-none bg-orange-600/75"
-                      }`}>
-                      {msg.text}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p
-                  className={`p-2 max-w-[200px] text-xs md:text-sm font-light rounded-lg mb-4 break-all text-white ${msg.senderId === authUser._id
-                    ? "rounded-br-none bg-gray-600/75"
-                    : "rounded-bl-none bg-orange-600/75"
+              <div>
+                {msg.image ? (
+                  <div className="max-w-[220px] md:max-w-[360px] xl:max-w-[540px] mb-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewUrl(msg.image)}
+                      className="w-full border border-gray-300 rounded-lg overflow-hidden cursor-pointer"
+                    >
+                      <img
+                        src={msg.image}
+                        alt="img"
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                    {msg.text && msg.text.trim() !== "" && (
+                      <p
+                        className={`text-xs md:text-sm text-white bg-black/40 px-2 py-1 rounded-md break-normal md:break-all ${
+                          msg.senderId === authUser._id
+                            ? "rounded-br-none bg-gray-600/75"
+                            : "rounded-bl-none bg-orange-600/75"
+                        }`}
+                      >
+                        {msg.text}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p
+                    className={`p-2 max-w-[220px] md:max-w-[360px] xl:max-w-[540px] text-xs md:text-sm font-light rounded-lg break-normal md:break-all text-white mb-0.5 ${
+                      msg.senderId === authUser._id
+                        ? "rounded-br-none bg-gray-600/75"
+                        : "rounded-bl-none bg-orange-600/75"
                     }`}
+                  >
+                    {msg.text}
+                  </p>
+                )}
+                <p
+                  className={`text-gray-200 text-xs ${
+                    msg.senderId === authUser._id ? "text-right" : "text-left"
+                  }`}
                 >
-                  {msg.text}
+                  {formatMsgTime(msg.createdAt)}
                 </p>
-              )}
+              </div>
               <div className="flex flex-col text-xs">
                 <img
                   src={
@@ -233,10 +254,10 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
                       : selectedUser?.profilePic || "/icons/avatar_icon.png"
                   }
                   alt="user"
-                  className={`w-7 h-7 object-cover rounded-full ${msg.senderId !== authUser._id && "ms-auto"
-                    }`}
+                  className={`w-7 h-7 object-cover rounded-full ${
+                    msg.senderId !== authUser._id && "ms-auto"
+                  }`}
                 />
-                <p className="text-gray-200">{formatMsgTime(msg.createdAt)}</p>
               </div>
             </div>
           ))
@@ -280,8 +301,13 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
                 </button>
                 <button
                   type="button"
+                  disabled={imageLoading}
                   onClick={handleSendImagePreview}
-                  className="text-xs text-white bg-orange-500 hover:bg-orange-400 rounded-full px-4 py-1 cursor-pointer transition"
+                  className={`text-xs px-4 py-1 rounded-full transition ${
+                    imageLoading
+                      ? "bg-gray-500 cursor-not-allowed"
+                      : "bg-orange-500 hover:bg-orange-400 cursor-pointer"
+                  } text-white`}
                 >
                   Send
                 </button>
@@ -298,6 +324,7 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
               placeholder="Send a message. . ."
               className="flex-1 shrink text-sm py-3 px-1.5 sm:p-3 border-none rounded-lg outline-none text-white placeholder-gray-300"
               value={input}
+              disabled={isSending}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) =>
                 e.key === "Enter" ? handleSendMessage(e) : null
@@ -320,10 +347,12 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
             </label>
           </div>
           <img
-            onClick={handleSendMessage}
+            onClick={!isSending ? handleSendMessage : undefined}
             src="/icons/send_button.svg"
             alt="send_button"
-            className="w-10 cursor-pointer"
+            className={`w-10 ${
+              isSending ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            }`}
           />
         </div>
       </div>
