@@ -5,6 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 import { ChatContext } from "../context/ChatContext";
 import ImagePreviewModal from "./ImagePreviewModal";
 import toast from "react-hot-toast";
+import { useBackButton } from "../lib/useBackButton";
 
 const ChatContainer = ({ showDetails, setShowDetails }) => {
   const scrollEnd = useRef(null);
@@ -118,6 +119,26 @@ const ChatContainer = ({ showDetails, setShowDetails }) => {
     // Update tracker after handling scroll
     lastMessageIdRef.current = lastId;
   }, [messages, selectedUser, authUser]);
+
+  useBackButton(() => {
+    if (previewUrl) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    if (showDetails) {
+      setShowDetails(false);
+      return;
+    }
+
+    if (selectedUser) {
+      setSelectedUser(null);
+      return;
+    }
+
+    // allow real browser back (exit app)
+    window.history.back();
+  });
 
   return selectedUser ? (
     <section className="h-screen sm:h-full overflow-scroll relative backdrop-blur-lg">
