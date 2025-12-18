@@ -11,7 +11,11 @@ const app = express();
 const server = http.createServer(app);
 
 // Socket.io Server Setup
-export const io = new Server(server, { cors: { origin: "*" } });
+export const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:5173", "https://chat.souvikmaity.space"],
+  },
+});
 
 // Store Online Users
 export const userSocketMap = {};
@@ -43,12 +47,7 @@ app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter);
 
 connectDB().then(() => {
-  if (process.env.NODE_ENV !== "production") {
-    server.listen(process.env.PORT || 5000, () =>
-      console.log(`Server Started on PORT: ${process.env.PORT || 5000}`)
-    );
-  }
+  server.listen(process.env.PORT || 5000, () =>
+    console.log(`Server Started on PORT: ${process.env.PORT || 5000}`)
+  );
 });
-
-// Export server for vercel deployment
-export default server;
